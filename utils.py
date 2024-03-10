@@ -101,10 +101,10 @@ class BlockingGridworld(object):
         
         self.normalize_transition_matrices()
         
-        self.make_state_determinstic(1)
-        self.make_state_determinstic(2)
-        self.make_state_determinstic(3)
-        self.make_state_determinstic(4)
+        # self.make_state_determinstic(1)
+        # self.make_state_determinstic(2)
+        # self.make_state_determinstic(3)
+        # self.make_state_determinstic(4)
         
         self.theta = theta
         
@@ -169,16 +169,16 @@ class BlockingGridworld(object):
         lc = [1,2,3,4]
         
         # disallow self transitions for the left column
-        if i == k and left_column:
-            return 0.0
+        # if i == k and left_column:
+        #     return 0.0
         
-        #disallow transition from the leftmost column to the one next to it
-        if k in self.blocked_states and left_column:
-            return 0.0
+        # # disallow transition from the leftmost column to the one next to it
+        # if k in self.blocked_states and left_column:
+        #     return 0.0
         
-        #disallow transition from the 2nd column to the left most column 
-        if k in lc and i in self.blocked_states:
-            return 0.0
+        # # disallow transition from the 2nd column to the left most column 
+        # if k in lc and i in self.blocked_states:
+        #     return 0.0
         
         if not self.neighbouring((xi, yi), (xk, yk)):
             return 0.0
@@ -399,3 +399,97 @@ class BlockingGridworld(object):
                 r_gw[s][a] = f.T@theta
                 
         return r_gw
+
+
+    def get_reachable_tube(self):
+        # the reachable tube is a dictionary with keys 't' being the timestep. 
+        Reach = {}
+        UnReach = {}
+
+        T = self.horizon
+        
+        Pa1 = self.transition_probability[:,0,:]
+        Pa2 = self.transition_probability[:,1,:]
+        Pa3 = self.transition_probability[:,2,:]
+        Pa4 = self.transition_probability[:,3,:]
+
+        P = [Pa1,Pa2,Pa3,Pa4]
+        # reach at time zero
+        # reach at time zero
+        Reach[str(0)] = [self.start_state]
+        UnReach[str(0)]= list(set(np.arange(1,self.n_states)) - set(Reach[str(0)]))
+        for t in range(1,T):
+            
+            pre = Reach[str(t-1)]
+        
+            pre_vec = np.zeros((1,self.n_states))
+            
+            # create the vector of pre states 
+            for s in pre:
+                pre_vec[0][s] = 1.0
+            
+            # normalize
+            pre_vec = pre_vec/pre_vec.sum()
+            
+            post_state = []
+            
+            for pre_state in pre:
+                for Pa in P:
+                    transfer = pre_vec@Pa
+                    
+                    for index in np.argwhere(transfer> 0.0):
+                        post_state.append(index[1])
+                        
+            post_state = list(set(post_state))
+
+            Reach[str(t)] = post_state
+            UnReach[str(t)] = list(set(np.arange(1,self.n_states)) - set(Reach[str(t)]))
+
+
+        return Reach, UnReach
+
+
+
+    def construct_Gamma(self):
+        m = self.n_actions
+        n = self.n_states
+        horizon = self.horizon
+
+        I = np.eye(self.n_states)
+        E = I
+        P = self.transition_probability[:,0,:]
+
+        for a in range(1, self.n_actions):
+            E = np.vstack((E,I))
+            P = np.vstack((P, self.transition_probability[:,a,:]))
+            
+        bold_I = np.eye(self.n_actions*self.n_states)
+        
+        Gamma = np.zeros((self.horizon*m*n, self.horizon*n))
+        
+    
+        for i in range(horizon-1):
+            Gamma[i*n*m:(i+1)*n*m, i*n:(i+1)*n] = -E
+            Gamma[i*n*m:(i+1)*n*m, (i+1)*n:(i+2)*n] =  self.discount*P
+        
+        Gamma[ (horizon-1)*m*n:(horizon)*m*n , (horizon-1)*n: horizon*n] = -E
+        
+        left_eye = np.vstack([bold_I for _ in range(horizon)])
+        
+        Gamma  = np.hstack((left_eye,Gamma))
+        
+    #     return -np.min(np.linalg.svd(Gamma, compute_uv=False)[:-1])
+        return Gamma
+
+    def construct_Xi(self, pi):
+        horizon, n_states, n_actions = pi.shape
+    
+        Xi = np.zeros((horizon*n_states*n_actions,1))
+        
+        for t in range(horizon):
+            curr_pi = pi[t].flatten('F')[:,None]
+    #         print(curr_pi.shape)
+            # next_pi = pi[t+1].flatten('F')[:,None]
+            Xi[t*n_states*n_actions:(t+1)*n_states*n_actions] = np.log(curr_pi) 
+        return Xi    
+    

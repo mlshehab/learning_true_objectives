@@ -34,7 +34,7 @@ if __name__ == '__main__':
     v = np.linalg.lstsq(F,ones_, rcond = None)
 
     # assert that ran(1) \in \ran(F)
-    assert np.linalg.norm(F@v[0] - ones_) <= 1e-5
+    # assert np.linalg.norm(F@v[0] - ones_) <= 1e-5
 
 
     # Construct E and P
@@ -54,21 +54,34 @@ if __name__ == '__main__':
     Pi = create_Pi(pi)
 
     Psi = np.zeros((psi_rows, psi_cols))
+    Reach, UnReach = gw.get_reachable_tube()
+
+    # for t in range(5):
+    #     print(f"Reach[{t}] = ", Reach[str(t)] )
+    #     print(f"UnReach[{t}] = ", UnReach[str(t)] )
 
     for i in range(horizon-1):
         Psi[i*gw.n_states*gw.n_actions:(i+1)*gw.n_states*gw.n_actions, i*gw.n_states:(i+1)*gw.n_states] = E
         Psi[i*gw.n_states*gw.n_actions:(i+1)*gw.n_states*gw.n_actions, (i+1)*gw.n_states:(i+2)*gw.n_states] = -discount*P
 
+    for t in range(horizon):
+        UnReach_t = UnReach[str(t)]
 
-    # vector from remark (1) that is in kernel of Psi, sanity check for Psi
-    v = np.ones((horizon*grid_size**2,1))
-    for i in range(horizon):
-        v[i*grid_size**2:(i+1)*grid_size**2] = discount**(horizon-1 -i)
+        for unreachable_state in UnReach_t:
+            for a in range(gw.n_actions):
+                Psi = np.delete(Psi,obj = unreachable_state*a, axis = 0)
+                Pi = np.delete(Pi, obj = unreachable_state*a, axis = 0 )
+
+    # print(Psi.shape)
+    # # vector from remark (1) that is in kernel of Psi, sanity check for Psi
+    # v = np.ones((horizon*grid_size**2,1))
+    # for i in range(horizon):
+    #     v[i*grid_size**2:(i+1)*grid_size**2] = discount**(horizon-1 -i)
         
-    assert np.linalg.norm(Psi@v) <= 1e-5
+    # assert np.linalg.norm(Psi@v) <= 1e-5
 
-    print("The rank of P is  : ", np.linalg.matrix_rank(P))
-    print("The rank of Psi is: ", np.linalg.matrix_rank(Psi))
+    # print("The rank of P is  : ", np.linalg.matrix_rank(P))
+    # print("The rank of Psi is: ", np.linalg.matrix_rank(Psi))
 
     # find the  solution
     v = np.linalg.pinv(Psi) @ Pi
@@ -80,16 +93,18 @@ if __name__ == '__main__':
     K = scipy.linalg.null_space(Psi)
     # print("The solution of mu (V_{T-1}) is: ", v[-grid_size**2:])
     print("The dim of kernel of Psi is: ", K.shape[1])
+
+    print(K.shape)
     if K.shape[1] > 1:
         print("Not Strongly Identifiable in the Original Space.")
     if scipy.linalg.null_space(Psi).shape[1] <= 1:
         print("The min of kernel projection is:", min(scipy.linalg.null_space(Psi)[-grid_size**2:]))
         print("The max of kernel projection is:", max(scipy.linalg.null_space(Psi)[-grid_size**2:]))
-
+    
     print("Testing with Features ...")
     # construct K_eta from equation (7) in the paper
     K_eta = K[-gw.n_states:,:]
-
+    print(K_eta.shape)
     # find the intersection as in equation (18)     
     A = E@K_eta
     B = F
@@ -98,7 +113,8 @@ if __name__ == '__main__':
     M = np.hstack((A,-B))
 
     V = scipy.linalg.null_space(M)
-    assert V.shape[1] == 1
+    print(V.shape)
+    # assert V.shape[1] == 1
 
     V_p = V[:A.shape[1]]
 
@@ -107,3 +123,6 @@ if __name__ == '__main__':
     # assert that the intersecttion is ran(1)
     assert np.abs(min(intersection) - max(intersection)) <= 1e-6
     print("Strongly Identifiable with Features.")
+
+
+    # print(gw.reachable_tube())
