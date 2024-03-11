@@ -9,9 +9,9 @@ if __name__ == '__main__':
     wind = 0.1
     discount = 0.9
     horizon = 10
-    start_state = 15
+    start_state = 15 
     feature_dim = 2
-    p1 = 0  # position of culvers burger joint
+    p1 = 24  # position of culvers burger joint
     p2 = 24 # position of charging station
 
     theta = 5*np.ones((2,1))
@@ -64,13 +64,6 @@ if __name__ == '__main__':
         Psi[i*gw.n_states*gw.n_actions:(i+1)*gw.n_states*gw.n_actions, i*gw.n_states:(i+1)*gw.n_states] = E
         Psi[i*gw.n_states*gw.n_actions:(i+1)*gw.n_states*gw.n_actions, (i+1)*gw.n_states:(i+2)*gw.n_states] = -discount*P
 
-    for t in range(horizon):
-        UnReach_t = UnReach[str(t)]
-
-        for unreachable_state in UnReach_t:
-            for a in range(gw.n_actions):
-                Psi = np.delete(Psi,obj = unreachable_state*a, axis = 0)
-                Pi = np.delete(Pi, obj = unreachable_state*a, axis = 0 )
 
     # print(Psi.shape)
     # # vector from remark (1) that is in kernel of Psi, sanity check for Psi
@@ -100,7 +93,7 @@ if __name__ == '__main__':
     if scipy.linalg.null_space(Psi).shape[1] <= 1:
         print("The min of kernel projection is:", min(scipy.linalg.null_space(Psi)[-grid_size**2:]))
         print("The max of kernel projection is:", max(scipy.linalg.null_space(Psi)[-grid_size**2:]))
-    
+
     print("Testing with Features ...")
     # construct K_eta from equation (7) in the paper
     K_eta = K[-gw.n_states:,:]
@@ -108,7 +101,7 @@ if __name__ == '__main__':
     # find the intersection as in equation (18)     
     A = E@K_eta
     B = F
-
+    
     # find their intersection
     M = np.hstack((A,-B))
 
