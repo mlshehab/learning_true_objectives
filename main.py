@@ -11,8 +11,8 @@ if __name__ == '__main__':
     horizon = 10
     start_state = 15 
     feature_dim = 2
-    p1 = 24  # position of culvers burger joint
-    p2 = 24 # position of charging station
+    p1 = 8  # position of culvers burger joint
+    p2 = 8 # position of charging station
 
     theta = 5*np.ones((2,1))
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     # find the intersection as in equation (18)     
     A = E@K_eta
     B = F
-    
+
     # find their intersection
     M = np.hstack((A,-B))
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     V_p = V[:A.shape[1]]
 
     intersection = A@V_p
-
+    
     # assert that the intersecttion is ran(1)
     assert np.abs(min(intersection) - max(intersection)) <= 1e-6
     print("Strongly Identifiable with Features.")

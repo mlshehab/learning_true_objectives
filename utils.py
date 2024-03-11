@@ -110,7 +110,7 @@ class BlockingGridworld(object):
         
         self.start_state = start_state
 #         self.make_state_determinstic(12)
-        self.reward_v = self.reward(self.theta)
+        self.reward_v = self.reward_function(self.theta)
     
     def __str__(self):  
         return "Gridworld({}, {}, {})".format(self.grid_size, self.wind,
