@@ -11,6 +11,7 @@ cwd = os.getcwd()
 image_folder_path = os.path.join(cwd, "plots")
 
 if __name__ == '__main__':
+
     grid_size = 5
     wind = 0.1
     discount = 0.9
@@ -68,7 +69,7 @@ if __name__ == '__main__':
             data.append( gw.compute_projected_kernel(Gamma))
             t_step.append(t)
             # print(t)
-        
+                
         # print("min is: ", min(data))    
         if min(data) < overall_min:
             overall_min = min(data)
@@ -94,8 +95,8 @@ if __name__ == '__main__':
     plt.gca().set_yticks(range(0, overall_max, 1), minor=True) 
     plt.legend()
     plt.grid()
-    # plt.show()    
-    plt.savefig(os.path.join(image_folder_path, 'fig_1_c.png'), dpi = 800)    
+    plt.show()    
+    # plt.savefig(os.path.join(image_folder_path, 'fig_1_c.png'), dpi = 800)    
 
 
    

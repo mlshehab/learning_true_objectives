@@ -374,15 +374,15 @@ class BlockingGridworld(object):
         des_ = (xs+xa,ys+ya)
         des_s = self.point_to_int(des_)
         
-        if self.manhatten_distance(des_s , self.p1) <= f[0]:
-            f[0] += 0.5
-        else: 
-            f[0] -= 0.5
+        # if self.manhatten_distance(des_s , self.p1) <= f[0]:
+        #     f[0] += 0.5
+        # else: 
+        #     f[0] -= 0.5
         
-        if self.manhatten_distance(des_s , self.p2) <= f[1]:
-            f[1] += 0.5
-        else: 
-            f[1] -= 0.5
+        # if self.manhatten_distance(des_s , self.p2) <= f[1]:
+        #     f[1] += 0.5
+        # else: 
+        #     f[1] -= 0.5
         return f
     
     def F_matrix(self):
@@ -390,8 +390,8 @@ class BlockingGridworld(object):
         
         for s in range(self.n_states):
             for a in range(self.n_actions):
-                F[s + a*self.n_states] = self.feature_vector_v2(s,a).T
-                
+                F[s + a*self.n_states][0] = self.feature_vector_v2(s,a)[0]
+                F[s + a*self.n_states][1] = self.feature_vector_v2(s,a)[1]
         return F
     
     
