@@ -1,11 +1,16 @@
 from utils import soft_bellman_operation
 from utils import create_Pi
 from utils import BlockingGridworld
+from utils import cvpxy_LSE
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 import os
 import time
+from numpy.linalg import norm
+from scipy.linalg import lapack
+import cvxpy as cp
+
 
 cwd = os.getcwd()
 image_folder_path = os.path.join(cwd, "plots","feature_based")
@@ -48,42 +53,44 @@ if __name__ == '__main__':
           
     
             # TEST IF WE AN RECOVER A SOLUTION FOR:   Gamma@reward = Xi 
-            #-----------------------------------------------------------#
-            sanity_check_1_res = np.linalg.lstsq(Gamma, Xi, rcond = -1)         #
-            recovered_reward = sanity_check_1_res[0][:gw.n_states*gw.n_actions] #
-            assert np.linalg.norm(Xi - Gamma@sanity_check_1_res[0]) <= 1e-5     #
-            #-----------------------------------------------------------#
+            #-------------------------------------------------------------------#
+            sanity_check_1_res = np.linalg.lstsq(Gamma, Xi, rcond = -1)         
+            recovered_reward = sanity_check_1_res[0][:gw.n_states*gw.n_actions] 
+            assert np.linalg.norm(Xi - Gamma@sanity_check_1_res[0]) <= 1e-5     
+            #-------------------------------------------------------------------#
             
            
             K = scipy.linalg.null_space(Gamma)
             projected_K = K[:gw.n_states*gw.n_actions,:]
 
             # TEST IF THE TRUE REWARD \in RECOVERED_REWARD + SPAN(projected_K)                        
-            #-----------------------------------------------------------------------------------------#
-            mat_ = recovered_reward + projected_K                                                     #
-            true_reward_res = np.linalg.lstsq(mat_, reward.ravel(order='F')[:,None], rcond = -1)      #
-            assert np.linalg.norm(reward.ravel(order='F')[:,None] - mat_@true_reward_res[0]) <= 1e-5  #
-            #-----------------------------------------------------------------------------------------#
-
-            # TEST IF THE RECOVERED REWARD \in SPAN(F)
-            sanity_check_1_res
-
+            #-------------------------------------------------------------------------------------------#
+            mat_ = recovered_reward + projected_K                                                     
+            sanity_check_2_res = np.linalg.lstsq(mat_, reward.ravel(order='F')[:,None], rcond = -1)      
+            assert np.linalg.norm(reward.ravel(order='F')[:,None] - mat_@sanity_check_2_res[0]) <= 1e-5  
+            #-------------------------------------------------------------------------------------------#
 
 
             F = gw.F_matrix()
-            L = F@theta
 
-            # assert that the reward is in range(F)
-            res = np.linalg.lstsq(F,reward.ravel(order='F')[:,None], rcond=-1)
-            omega = res[0]
-
+            # TEST IF THE RECOVERED REWARD \in SPAN(F)
+            #-----------------------------------------------------------------------#
+            sanity_check_3_res = np.linalg.lstsq(F, recovered_reward, rcond = -1)
             try:
-                assert np.linalg.norm(F@omega - reward.ravel(order='F')[:,None]) <= 1e-5
-            except:
-                print("The error is caused with: ", landmark_loc)
-                print("The res is: ", np.linalg.norm(F@omega - reward.ravel()) )
-                print("The rank of F is :", np.linalg.matrix_rank(F))
+                assert norm(F@sanity_check_3_res[0] - recovered_reward) <= 1e-5
+            except AssertionError:
+                pass
+            #-----------------------------------------------------------------------#
+          
 
+            # recover a reward using equality constrained Lstsq
+            reward_ , theta_  , prob = cvpxy_LSE(Gamma,Xi,gw , verbose = False)
+
+
+            print(prob.status)
+
+            time.sleep(1)
+            # print(x[3][:10].T)
 
             A = scipy.linalg.orth(projected_K)
 

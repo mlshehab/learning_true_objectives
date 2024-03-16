@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import scipy.special
+import cvxpy as cp
 
 inf  = float("inf")
 
@@ -534,3 +535,41 @@ class BlockingGridworld(object):
         # print("The shape of projeted matrix is: ", projected_K.shape)
         # print("The rank of projected K is: ", np.linalg.matrix_rank(projected_K))    
         return np.linalg.matrix_rank(projected_K)
+
+
+
+
+def cvpxy_LSE(Gamma,Xi, gw , verbose):
+    F = gw.F_matrix()
+    P = np.hstack((np.eye(F.shape[0]), np.zeros((F.shape[0], Gamma.shape[1] - F.shape[0])) ))
+            
+    A = np.hstack((Gamma, np.zeros((Gamma.shape[0], gw.feature_dim))))
+    b = Xi
+    C = np.hstack((-P,F))
+    d = np.zeros((F.shape[0],1))
+
+    x = cp.Variable((A.shape[1],1))
+
+    # Define the objective function
+    objective = cp.Minimize(cp.norm(A @ x - b))
+
+    # Define the constraints
+    constraints = [C @ x == d]
+
+    # Formulate the problem
+    problem = cp.Problem(objective, constraints)
+
+    # Solve the problem
+    problem.solve(verbose = verbose)
+
+    # Get the optimal value of x
+    
+    optimal_x = x.value
+
+    # Print the optimal solution
+    # print("Optimal x:", optimal_x)
+    # print("\nThe optimal value is", problem.value)
+    # print("The norm of the residual is ", cp.norm(A @ x - b, p=2).value)
+    # print("The norm of the equality residual is ", cp.norm(C @ x - d, p=2).value)
+
+    return P@optimal_x[:-2], optimal_x[-2:] , problem
