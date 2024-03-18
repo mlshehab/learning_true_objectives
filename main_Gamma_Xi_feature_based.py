@@ -23,7 +23,7 @@ if __name__ == '__main__':
     wind = 0.1
     discount = 0.9 
     horizon =   13   
-    start_state = 4 
+    start_state = 15 
     feature_dim = 2
     # p1 = 20 # position of culvers burger joint
     # p2 = 20 # position of charging station
@@ -35,6 +35,7 @@ if __name__ == '__main__':
     style = ["-","--",":","-."]
     overall_min = 1e6
     overall_max = -1e6
+    feature_type = "sparse"
     
     for landmark_loc,col,st in zip(landmark_locations, color,style):
         # print(start_state)
@@ -45,7 +46,7 @@ if __name__ == '__main__':
 
         for t in range(15,20):
 
-            gw = BlockingGridworld(grid_size,wind,discount,t,start_state, feature_dim, p1,p2,theta)
+            gw = BlockingGridworld(grid_size,wind,discount,t,start_state, feature_dim, p1,p2,theta, feature_type)
             reward = gw.reward_v
    
             V,Q,pi = soft_bellman_operation(gw,reward)
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 
             print(prob.status)
 
-            time.sleep(1)
+            # time.sleep(1)
             # print(x[3][:10].T)
 
             A = scipy.linalg.orth(projected_K)
@@ -104,6 +105,7 @@ if __name__ == '__main__':
             resid = np.linalg.lstsq(A,ones_, rcond=-1)
             assert resid[1] <= 1e-5
 
+            # A = projected_K
 
             # print("A", A.shape)
             B = F   
@@ -116,11 +118,11 @@ if __name__ == '__main__':
             # V_p = V[:A.shape[1]]
 
             # intersection = A@V_p
-            # basis_intersection = scipy.linalg.orth(intersection)
+            # # basis_intersection = scipy.linalg.orth(intersection)
 
-            l = scipy.linalg.null_space(np.hstack((scipy.linalg.null_space(A.T), scipy.linalg.null_space(B.T)  )).T)
+            # l = scipy.linalg.null_space(np.hstack((scipy.linalg.null_space(A.T), scipy.linalg.null_space(B.T)  )).T)
          
-            data.append(l.shape[1]) 
+            data.append(intersection.shape[1]) 
             t_step.append(t)
             
 
@@ -131,7 +133,7 @@ if __name__ == '__main__':
         
         plt.plot(t_step, data, linestyle=st,  color= col, linewidth = 1.0, alpha=0.8, label = f"landmark location = {(p1,p2)}")    
         # plt.plot(t_step, n_unreach_states, linestyle=':',  color= col, linewidth = 1.0, alpha=0.5, label = f"start state = {start_state}")
-
+    print(F)
     plt.axhline(y = overall_min, color = 'black', linestyle=':',linewidth = 3.0, label = f'min dim = {overall_min}')
     plt.xlabel('Horizon')
     plt.ylabel('Dimension of Intersection')

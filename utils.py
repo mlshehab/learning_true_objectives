@@ -68,7 +68,7 @@ class BlockingGridworld(object):
     Gridworld MDP.
     """
 
-    def __init__(self, grid_size, wind, discount,horizon,start_state, feature_dim, p1, p2,theta):
+    def __init__(self, grid_size, wind, discount,horizon,start_state, feature_dim, p1, p2,theta, feature_type):
         """
         grid_size: Grid size. int.
         wind: Chance of moving randomly. float.
@@ -110,6 +110,7 @@ class BlockingGridworld(object):
         self.theta = theta
         
         self.start_state = start_state
+        self.feature_type = feature_type
 #         self.make_state_determinstic(12)
         self.reward_v = self.reward_function(self.theta)
     
@@ -358,8 +359,18 @@ class BlockingGridworld(object):
             f[1] -= 0.5
         
         return f
-    
-    def feature_vector_v2(self,s,a):
+
+    def sparse_reward_features(self,s,a):
+   
+        f = np.zeros((self.feature_dim,1))
+
+        f[0] = 1 if s == self.p1 else 0
+        
+        f[1] = 1 if s == self.p2 else 0
+        
+        return f
+
+    def dense_reward_features(self,s,a):
         
         f = np.zeros((self.feature_dim,1))
 
@@ -387,22 +398,25 @@ class BlockingGridworld(object):
         return f
     
     def F_matrix(self):
+        feature_function = self.dense_reward_features if self.feature_type == "dense" else self.sparse_reward_features
+        
         F = np.zeros((self.n_states*self.n_actions, 2))
         
         for s in range(self.n_states):
             for a in range(self.n_actions):
-                F[s + a*self.n_states][0] = self.feature_vector_v2(s,a)[0]
-                F[s + a*self.n_states][1] = self.feature_vector_v2(s,a)[1]
+                F[s + a*self.n_states][0] = feature_function(s,a)[0]
+                F[s + a*self.n_states][1] = feature_function(s,a)[1]
         return F
     
     
     def reward_function(self, theta):
         
+        feature_function = self.dense_reward_features if self.feature_type == "dense" else self.sparse_reward_features
         r_gw = np.zeros((self.n_states, self.n_actions))
         
         for s in range(self.n_states):
             for a in range(self.n_actions):
-                f = self.feature_vector_v2(s,a)
+                f = feature_function(s,a)
                 r_gw[s][a] = f.T@theta
                 
         return r_gw
