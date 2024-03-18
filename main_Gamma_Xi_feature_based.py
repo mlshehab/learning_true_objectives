@@ -86,19 +86,11 @@ if __name__ == '__main__':
 
             # recover a reward using equality constrained Lstsq
             reward_ , theta_  , prob = cvpxy_LSE(Gamma,Xi,gw , verbose = False)
-
-
             print(prob.status)
 
-            # time.sleep(1)
-            # print(x[3][:10].T)
+            
 
             A = scipy.linalg.orth(projected_K)
-
-            # print("A.shape =",A.shape)
-            # if A.shape[1] == 4:
-            #     print("First A: ", A[:6,:].round(decimals =3))
-            #     print("First F: ", F[:16,:].round(decimals =3))
 
             # assert that a vector of ones is in the projected kernel
             ones_ = np.ones_like(A[:,0][:None])
