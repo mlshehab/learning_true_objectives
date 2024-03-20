@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     assert np.linalg.norm(Psi@v - Pi) <= 1e-5
 
-    K = scipy.linalg.null_space(Psi)
+    K = scipy.linalg.null_space(Psi)    
     # print("The solution of mu (V_{T-1}) is: ", v[-grid_size**2:])
     print("The dim of kernel of Psi is: ", K.shape[1])
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     V_p = V[:A.shape[1]]
 
     intersection = A@V_p
-    
+
     # assert that the intersecttion is ran(1)
     assert np.abs(min(intersection) - max(intersection)) <= 1e-6
     print("Strongly Identifiable with Features.")
