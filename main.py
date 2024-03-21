@@ -83,7 +83,7 @@ def main(BlockingGridworld):
     plt.show()    
     # plt.savefig(os.path.join(image_folder_path, 'fig_1_c.png'), dpi = 800)
 
-def main_feature_based(BlockingGridworld):
+def main_feature_based(BlockingGridworld, feature_type):
     
     grid_size = 5
     wind = 0.1
@@ -100,7 +100,7 @@ def main_feature_based(BlockingGridworld):
     overall_min = 1e6
     overall_max = -1e6
 
-    feature_type = "sparse"
+    # feature_type = "dense"
     
     for landmark_loc,col,st in zip(landmark_locations, color,style):
         # print(start_state)
@@ -148,7 +148,6 @@ def main_feature_based(BlockingGridworld):
                 pass
             #-----------------------------------------------------------------------#
           
-
             # recover a reward using equality constrained Lstsq
             reward_ , theta_  , prob = cvpxy_LSE(Gamma,Xi,gw , verbose = False)
             # print(prob.status)
@@ -179,11 +178,11 @@ def main_feature_based(BlockingGridworld):
             l = scipy.linalg.null_space(np.hstack((scipy.linalg.null_space(A.T), scipy.linalg.null_space(B.T)  )).T)
 
             # print(l.shape)
-            if l.shape[1] == 1:
-                print("P = ", landmark_loc)
-                # print("min = ", min(l))
-                # print("max = ", max(l))
-                print("abs: ", np.abs(max(l) - min(l)))
+            # if l.shape[1] == 1:
+            #     print("P = ", landmark_loc)
+            #     # print("min = ", min(l))
+            #     # print("max = ", max(l))
+            #     print("abs: ", np.abs(max(l) - min(l)))
                 # time.sleep(1)
             data.append(l.shape[1]) 
             t_step.append(t)
@@ -211,6 +210,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Code for L4DC 2024 Paper: Learning True Objectives")
     parser.add_argument("-d" , choices= ['fig1a', 'fig1b', 'fig1c'], default= 'fig1c', help = "specifying the dynamics")
     parser.add_argument("--with_features" , action = 'store_true', help = "flag to use the feature based implementation")
+    parser.add_argument("--dense" , action = 'store_true', help = "flag to use the dense features")
+    parser.add_argument("--sparse" , action = 'store_false', help = "flag to use the sparse features")
     args = parser.parse_args()
  
     if args.d == "fig1a":
@@ -223,10 +224,17 @@ if __name__ == '__main__':
         print("Using the Dynamics of Figure 1.c ...")
         BlockingGridworld = WallBlockingGridWorld
 
+    feature_type = "dense" if args.dense else "sparse"
 
     if args.with_features:
-        print("Running the main function with Features ...")
-        main_feature_based(BlockingGridworld)
+        if args.dense:
+            print("Running the main function with Dense Features ...")
+            
+        else:
+            print("Running the main function with Sparse Features ...")
+
+        main_feature_based(BlockingGridworld, feature_type)
+
     else:
         print("Running the main function without Features ...")
         main(BlockingGridworld)
