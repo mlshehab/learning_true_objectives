@@ -598,6 +598,7 @@ class WallBlockingGridWorld(BasicGridWorld):
 
     def __str__(self):
         return 'c'
+        
     def _transition_probability(self, i, j, k):
         """
         Get the probability of transitioning from state i to state k given
