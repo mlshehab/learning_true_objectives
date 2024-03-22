@@ -597,7 +597,7 @@ class WallBlockingGridWorld(BasicGridWorld):
         self.make_state_determinstic(4)
 
     def __str__(self):
-        return 'c'
+        return 'c' # used for proper naming of the titles of the plots
         
     def _transition_probability(self, i, j, k):
         """

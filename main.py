@@ -1,6 +1,5 @@
 from utils import soft_bellman_operation
 from utils import create_Pi
-# from utils import BlockingGridworld
 from utils import cvpxy_LSE
 import numpy as np
 import scipy
@@ -31,7 +30,7 @@ def main(BlockingGridworld):
     p2 = 24 # position of charging station
 
     theta = 5*np.ones((2,1))
-    feature_type = "dense"
+    feature_type = "dense" # used just as a placeholder, has no effect on the results here
 
     if not os.path.exists(image_folder_path):
         os.makedirs(image_folder_path)
@@ -150,42 +149,27 @@ def main_feature_based(BlockingGridworld, feature_type):
           
             # recover a reward using equality constrained Lstsq
             reward_ , theta_  , prob = cvpxy_LSE(Gamma,Xi,gw , verbose = False)
-            # print(prob.status)
-
             
 
-            A = scipy.linalg.orth(projected_K)
+            # TEST IF RAN(1) \in projected_K
+            #-------------------------------------------------------------#
+            ones_ = np.ones_like(projected_K[:,0][:None])
+            resid = np.linalg.lstsq(projected_K,ones_.reshape((100,1)), rcond=-1)
+            assert norm(projected_K@resid[0] - ones_) <= 1e-5
+            #-------------------------------------------------------------#
 
-            # assert that a vector of ones is in the projected kernel
-            ones_ = np.ones_like(A[:,0][:None])
-            resid = np.linalg.lstsq(A,ones_, rcond=-1)
-            assert resid[1] <= 1e-5
+ 
+            # find the intersection projected_K \bigcap ran(F)
+            #-----------------------------------------------------------------------------------------------------------------#
+            l = scipy.linalg.null_space(np.hstack((scipy.linalg.null_space(projected_K.T), scipy.linalg.null_space(F.T)  )).T)
 
-            # A = projected_K
-
-            B = F   
-            
-
-            # # find their intersection
-            # M = np.hstack((A,-B))
-
-            # V = scipy.linalg.null_space(M)
-            # V_p = V[:A.shape[1]]
-
-            # intersection = A@V_p
-            # # basis_intersection = scipy.linalg.orth(intersection)
-
-            l = scipy.linalg.null_space(np.hstack((scipy.linalg.null_space(A.T), scipy.linalg.null_space(B.T)  )).T)
-
-            # print(l.shape)
-            # if l.shape[1] == 1:
-            #     print("P = ", landmark_loc)
-            #     # print("min = ", min(l))
-            #     # print("max = ", max(l))
-            #     print("abs: ", np.abs(max(l) - min(l)))
-                # time.sleep(1)
-            data.append(l.shape[1]) 
+            if l.shape[1] == 1:
+                is_a_vector_of_ones = np.abs(max(l) - min(l)) <=1e-5 and norm(l) >= 1e-5
+                data.append(int(is_a_vector_of_ones))
+            else:
+                data.append(l.shape[1]) 
             t_step.append(t)
+            #-----------------------------------------------------------------------------------------------------------------#
             
 
         if min(data) < overall_min:
@@ -194,12 +178,12 @@ def main_feature_based(BlockingGridworld, feature_type):
             overall_max = max(data)
         
         plt.plot(t_step, data, linestyle=st,  color= col, linewidth = 1.0, alpha=0.8, label = f"landmark location = {(p1,p2)}")    
-        # plt.plot(t_step, n_unreach_states, linestyle=':',  color= col, linewidth = 1.0, alpha=0.5, label = f"start state = {start_state}")
-    # print(F)
+         
+     
     plt.axhline(y = overall_min, color = 'black', linestyle=':',linewidth = 3.0, label = f'min dim = {overall_min}')
     plt.xlabel('Horizon')
     plt.ylabel('Dimension of Intersection')
-    plt.title(f'Plots for Figure 2 of L4DC Paper -- Start = {start_state}')
+    plt.title(f'Plots for Figure 2 of L4DC Paper with {feature_type.upper()} Features -- Start State= {start_state}')
     plt.gca().set_yticks(range(0, overall_max, 1), minor=True) 
     plt.legend()
     # plt.grid()
@@ -208,12 +192,12 @@ def main_feature_based(BlockingGridworld, feature_type):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Code for L4DC 2024 Paper: Learning True Objectives")
-    parser.add_argument("-d" , choices= ['fig1a', 'fig1b', 'fig1c'], default= 'fig1c', help = "specifying the dynamics")
-    parser.add_argument("--with_features" , action = 'store_true', help = "flag to use the feature based implementation")
-    parser.add_argument("--dense" , action = 'store_true', help = "flag to use the dense features")
-    parser.add_argument("--sparse" , action = 'store_false', help = "flag to use the sparse features")
+    parser.add_argument("-d" , choices= ['fig1a', 'fig1b', 'fig1c'], default= 'fig1c', help = "Specifying the dynamics")
+    parser.add_argument("--with_features" , choices = ["dense", "sparse", None], default= None, help = "Specifying the features")
+    
     args = parser.parse_args()
- 
+
+
     if args.d == "fig1a":
         print("Using the Dynamics of Figure 1.a ...")
         BlockingGridworld = BasicGridWorld
@@ -223,15 +207,11 @@ if __name__ == '__main__':
     else:
         print("Using the Dynamics of Figure 1.c ...")
         BlockingGridworld = WallBlockingGridWorld
-
-    feature_type = "dense" if args.dense else "sparse"
-
+    
     if args.with_features:
-        if args.dense:
-            print("Running the main function with Dense Features ...")
-            
-        else:
-            print("Running the main function with Sparse Features ...")
+        feature_type = args.with_features
+        print(f"Running the main function with {feature_type} features ...")
+    
 
         main_feature_based(BlockingGridworld, feature_type)
 
