@@ -3,6 +3,13 @@
 Code for the paper "Learning True Objectives"
 
 ## Usage
+To clone the repository and install the requirements, run the following:
+```Console
+git clone https://github.com/mlshehab/learning_true_objectives.git
+cd ./learning_true_objectives
+pip install -r requirements.txt
+```
+
 The optional arguments for  `main.py` are given by:
 
 ```console
