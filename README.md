@@ -31,7 +31,9 @@ The default for the argument `--with_features` is `None` and should not be speci
 In order to reproduce the results of Figure 1 (a,b or c), run the command:
 
 ```console 
-python main.py -d fig1a 
+python main.py -d fig1a  # for results of figure 1 (a)
+python main.py -d fig1b  # for results of figure 1 (b)
+python main.py -d fig1c  # for results of figure 1 (c)
 ```
 
 In order to reproduce the results of Figure 2 using **Dense Features**, run the command:
