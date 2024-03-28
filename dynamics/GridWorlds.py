@@ -384,7 +384,7 @@ class BasicGridWorld(object):
         # reach at time zero
         # reach at time zero
         Reach[str(0)] = [self.start_state]
-        UnReach[str(0)]= list(set(np.arange(1,self.n_states)) - set(Reach[str(0)]))
+        UnReach[str(0)]= list(set(np.arange(0,self.n_states)) - set(Reach[str(0)]))
 
         for t in range(1,T):
             
@@ -411,7 +411,7 @@ class BasicGridWorld(object):
             post_state = list(set(post_state))
 
             Reach[str(t)] = post_state
-            UnReach[str(t)] = list(set(np.arange(1,self.n_states)) - set(Reach[str(t)]))
+            UnReach[str(t)] = list(set(np.arange(0,self.n_states)) - set(Reach[str(t)]))
 
 
         return Reach, UnReach

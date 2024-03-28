@@ -48,7 +48,7 @@ def main(BlockingGridworld):
         t_step = []
         data = []
         total_unreach = ()
-
+        
         for t in range(3,20):
             gw = BlockingGridworld(grid_size,wind,discount,t,start_state, feature_dim, p1,p2,theta,feature_type)
             reward = gw.reward_v
@@ -96,8 +96,8 @@ def main_feature_based(BlockingGridworld, feature_type):
     landmark_locations = [(0,24), (3,1), (3,19), (14,14)]
     color = ['blue', 'red','green', 'cyan']
     style = ["-","--",":","-."]
-    overall_min = 1e6
-    overall_max = -1e6
+    # overall_min = 1e6
+    # overall_max = -1e6
 
     # feature_type = "dense"
     
@@ -112,6 +112,12 @@ def main_feature_based(BlockingGridworld, feature_type):
 
             gw = BlockingGridworld(grid_size,wind,discount,t,start_state, feature_dim, p1,p2,theta, feature_type)
             reward = gw.reward_v
+            
+            eps = 1e-6
+            # np.random.rand()
+            noise = eps*np.random.rand(reward.shape[0], reward.shape[1])
+            print("noisr norm: ", norm(noise.ravel()))
+            reward = reward + noise
    
             V,Q,pi = soft_bellman_operation(gw,reward)
             Gamma, Xi , n_unreach_states = gw.prune_Gamma_and_Xi(pi)
@@ -148,8 +154,10 @@ def main_feature_based(BlockingGridworld, feature_type):
             #-----------------------------------------------------------------------#
           
             # recover a reward using equality constrained Lstsq
-            reward_ , theta_  , prob = cvpxy_LSE(Gamma,Xi,gw , verbose = False)
-            
+            reward_ , theta_  , opt_ = cvpxy_LSE(Gamma,Xi,gw , verbose = False)
+      
+            if norm(Gamma@opt_[:-2] - Xi) > 1e-5:
+                print("The norm is: ", norm(Gamma@opt_[:-2] - Xi))
 
             # TEST IF RAN(1) \in projected_K
             #-------------------------------------------------------------#
@@ -162,29 +170,42 @@ def main_feature_based(BlockingGridworld, feature_type):
             # find the intersection projected_K \bigcap ran(F)
             #-----------------------------------------------------------------------------------------------------------------#
             l = scipy.linalg.null_space(np.hstack((scipy.linalg.null_space(projected_K.T), scipy.linalg.null_space(F.T)  )).T)
-
-            if l.shape[1] == 1:
+            if l.shape[1] == 0:
+                data.append(2) # exactly identifiable
+            elif l.shape[1] == 1:
                 is_a_vector_of_ones = np.abs(max(l) - min(l)) <=1e-5 and norm(l) >= 1e-5
-                data.append(int(is_a_vector_of_ones))
+                if is_a_vector_of_ones:
+                    data.append(1) # strongly identifiable
+                else:
+                    data.append(0) # not strongly identifiable
             else:
-                data.append(l.shape[1]) 
+                data.append(0) # not strongly identifiable
+
+            # if l.shape[1] == 1:
+            #     is_a_vector_of_ones = np.abs(max(l) - min(l)) <=1e-5 and norm(l) >= 1e-5
+            #     print("landmark: ", landmark_loc)
+            #     print(is_a_vector_of_ones)
+            #     data.append(int(is_a_vector_of_ones))
+            # else:      
+            #     data.append(l.shape[1]) 
             t_step.append(t)
             #-----------------------------------------------------------------------------------------------------------------#
             
 
-        if min(data) < overall_min:
-            overall_min = min(data)
-        if max(data)> overall_max:
-            overall_max = max(data)
+        # if min(data) < overall_min:
+        #     overall_min = min(data)
+        # if max(data)> overall_max:
+        #     overall_max = max(data)
         
         plt.plot(t_step, data, linestyle=st,  color= col, linewidth = 1.0, alpha=0.8, label = f"landmark location = {(p1,p2)}")    
          
-     
-    plt.axhline(y = overall_min, color = 'black', linestyle=':',linewidth = 3.0, label = f'min dim = {overall_min}')
+    # plt.figure(figsize= (10,10)) 
+    # plt.axhline(y = overall_min, color = 'black', linestyle=':',linewidth = 3.0, label = f'min dim = {overall_min}')
     plt.xlabel('Horizon')
-    plt.ylabel('Dimension of Intersection')
+    # plt.ylabel('Identifiabili')
     plt.title(f'Plots for Figure 2 of L4DC Paper with {feature_type.upper()} Features -- Start State= {start_state}')
-    plt.gca().set_yticks(range(0, overall_max, 1), minor=True) 
+    # plt.gca().set_yticks(range(0, 2, 1), minor=True) 
+    plt.yticks([0,1,2], ["not s. i.","s. i.","e. i."])
     plt.legend()
     # plt.grid()
     plt.show()    

@@ -98,4 +98,4 @@ def cvpxy_LSE(Gamma,Xi, gw , verbose):
     # print("The norm of the residual is ", cp.norm(A @ x - b, p=2).value)
     # print("The norm of the equality residual is ", cp.norm(C @ x - d, p=2).value)
 
-    return P@optimal_x[:-2], optimal_x[-2:] , problem
+    return P@optimal_x[:-2], optimal_x[-2:] , optimal_x
