@@ -1,4 +1,6 @@
 ## Description
+[![Conference](https://img.shields.io/badge/L4DC2024-Accepted-success)](https://l4dc.web.ox.ac.uk/home)
+
 
 Code for the paper [Learning true objectives: Linear algebraic characterizations of identifiability in inverse reinforcement learning](https://proceedings.mlr.press/v242/shehab24a.html), published in [L4DC 2024](https://l4dc.web.ox.ac.uk/home). The extended version of the paper can be found [here](https://dx.doi.org/10.7302/23151).
 
