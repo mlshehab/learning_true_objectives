@@ -1,6 +1,6 @@
 ## Description
 
-Code for the paper "Learning True Objectives"
+Code for the paper [Learning true objectives: Linear algebraic characterizations of identifiability in inverse reinforcement learning](https://proceedings.mlr.press/v242/shehab24a.html), published in [L4DC 2024](https://l4dc.web.ox.ac.uk/home). The extended version of the paper can be found [here](https://dx.doi.org/10.7302/23151).
 
 ## Usage
 To clone the repository and install the requirements, run the following:
@@ -51,6 +51,12 @@ python main.py -d fig1c --with_features sparse
 
 ## Authors
 
-Mohamad Louai Shehab  
+[Mohamad Louai Shehab](https://scholar.google.com/citations?user=DJvw8dUAAAAJ&hl=en&oi=ao) 
+
 [Antoine Aspeel](https://aaspeel.github.io/) 
+
+[Nikos Arechiga](https://scholar.google.com/citations?user=NFWFaGAAAAAJ&hl=en)
+
+[Andrew Best](https://scholar.google.com/citations?user=eIQlFbcAAAAJ&hl=en)
+
 [Necmiye Ozay](https://web.eecs.umich.edu/~necmiye/)
